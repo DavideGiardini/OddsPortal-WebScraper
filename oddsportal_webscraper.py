@@ -29,10 +29,6 @@ def scrape_links(addr_s):
             category = "Play-In"
         else:
             category = next_sibling
-        # se in una data sono state fatte partite di più categorie occorre risolvere manualmente
-        if a.text in cat:
-            cat[a.text] = "please control"
-            continue
         if a.text[0].isnumeric():
            cat[a.text] = category
         else:
@@ -42,7 +38,7 @@ def scrape_links(addr_s):
     for a in soup_s.findAll("td", class_="name table-participant"):
         if a.text[0] == " ":
             continue
-        # Usiamo normalize() per togliere "\xa0" dalla fine di ogni stringa all'interno di names
+        # We use normalize() to eliminate "\xa0" from the end of every string in names
         names_s.append(unicodedata.normalize("NFKD", a.text).rstrip())
         for b in a('a'):
             link = "https://www.oddsportal.com" + b.get('href', None)
@@ -55,12 +51,12 @@ def scrape_links(addr_s):
 
 def scrape_odds(link_s):
     # AH
-    # Costruisce il link per ah e apre la pagina
+    # Build the AH link and opens it
     link_ah = link_s + "#ah;1"
     driver.get(link_ah)
     content = driver.page_source
     soup_s = BeautifulSoup(content, features="html.parser")
-    # trova le informazioni
+    # Find the information
     ratings_s = []
     for a in soup_s.findAll("div", class_="table-container"):
         b = a.text.find("(")
@@ -72,20 +68,17 @@ def scrape_odds(link_s):
                 continue
             ratings_s.append(c.text)
             h += 1
-    # in caso di errore: print error
-#    if not ratings_s:
-#            print("can't find Asian Handicap at: " + link_s)
     j = 0
     diff_ah = 1000
     best = 1000
-    # trova i numeri più vicini
+    # Find the nearest numbers
     while j < len(ratings_s):
         diff_n = abs(float(ratings_s[j + 1]) - float(ratings_s[j + 2]))
         if diff_n < diff_ah:
             diff_ah = diff_n
             best = j
         j += 3
-    # controllo che la differenza sia minore di 0.20
+    # Checks that the difference is less than 0.20
     if diff_ah >= 0.20:
         ah = "NULL"
     else:
@@ -100,9 +93,9 @@ def scrape_odds(link_s):
     is_ot = ""
     score_ot = ""
     score_f = ""
-    # trova il paragrafo chiamato "result"
+    # Find the pragraph called "result"
     for a in soup_s.findAll("p", class_="result"):
-        # al suo interno trova la posizione della parentesi
+        # Inside it, search for parenthesis
         txt = a.text
         p = txt.find("(")
         txt_s = txt.split(" ")
@@ -121,16 +114,16 @@ def scrape_odds(link_s):
     # DATE
     date = ""
     for a in soup_s.findAll("p", class_="date"):
-        # al suo interno prendiamo la data dividendo la stringa in 3 parti ai livelli delle virgole e prendendo quella centrale
+        # Splits the string in 3 pieces and takes the central one as the date
         date = a.text.split(', ')[1]
-        # In questo modo togliamo i doppi spazi dalle date
+        # Removes double spaces in between dates
         date = re.sub(' +', ' ', date).strip()
 
     # O/U
-    # Costruzione del link per over-under e apertura pagina
+    # Build links for Over/Unders and opens them
     link_ou = link_s + "#over-under;1"
     driver.get(link_ou)
-    # We have to refresh the page, otherwise the driver remains in the Asian Handicap page (for some reason)
+    # We have to refresh the page, otherwise the driver remains in the Asian Handicap page
     driver.refresh()
     content = driver.page_source
     soup_ou = BeautifulSoup(content, features="html.parser")
@@ -145,25 +138,22 @@ def scrape_odds(link_s):
                 continue
             ratings_ou.append(c.text)
             h += 1
-    # in caso di errore: print error
-#    if not ratings_ou:
-#            print("can't find Over/Under at: " + link_s)
     j = 0
     diff_ou = 1000
     best = 1000
-    # trova i numeri più vicini
+    # Find the nearest numbers
     while j < len(ratings_ou):
         diff_n = abs(float(ratings_ou[j + 1]) - float(ratings_ou[j + 2]))
         if diff_n < diff_ou:
             diff_ou = diff_n
             best = j
         j += 3
-    # controllo che la differenza sia minore di 0.20
+    # Checks that the difference is less than 0.20
     if diff_ou >= 0.20:
         ou = "NULL"
     else:
         ou = ratings_ou[best].split(" ")[1]
-    # se la differenza è ancora uguale a 1000 ritorna il valore "not found"
+    # If the difference is still equal to 1000, returns "not found"
     if diff_ou == 1000:
         diff_ou = "Not Found"
     else:
@@ -173,7 +163,7 @@ def scrape_odds(link_s):
 
 
 def correction(df):
-    # Tentativo di correzione dei link mancanti
+    # Tries to correct missing values
     print("correggo i dati mancanti")
     null_ou = pd.isnull(df["OU"])
     null_ah = pd.isnull(df["AH"])
@@ -195,16 +185,16 @@ def correction(df):
 
 
 # Loop through seasons and pages to retrieve all the links, the matches, the scores and build the dictionary Date-PlayOffs
-h = 3
+h = 0
 # loop through seasons
 while h < 12:
     names = []
     links = []
     score = []
     cat = {}
-#    if h == 0:
-#        addr_s = "https://www.oddsportal.com/basketball/usa/nba/results/"
-#    else:
+    if h == 0:
+        addr_s = "https://www.oddsportal.com/basketball/usa/nba/results/"
+    else:
     addr_s = "https://www.oddsportal.com/basketball/usa/nba-" + str(2021-h) + "-" + str(2022-h) + "/results/"
     # loop through pages
     i = 0
@@ -262,7 +252,7 @@ while h < 12:
                        'diff AH': diff_ah,
                        'OU': OU,
                        'diff OU': diff_ou, })
-    # Se la stagione è la 2014-2015 non vogliamo la correzione, perché nel sito non sono mai presenti ah/ou
+    # If the season is the 2014-2015 we don't want the correction, as all the AH and O/U are missing
     if not h == 7:
         df = correction(df)
     save_addr = "C:/Users/david/Desktop/NBA odds/" + str(2021-h) + "-" + str(2022-h) + ".csv"
