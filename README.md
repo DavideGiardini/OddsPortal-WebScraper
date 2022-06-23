@@ -16,4 +16,4 @@ I'll give you an example:<br>
 <p align = "center">
 <img width="500" alt="image" src="https://user-images.githubusercontent.com/98034877/175402083-d465e805-4357-4e5f-935b-c0e24e4bbe07.png">
 </p>
-In this Finals' match betweet Golden State Warriors and Boston Celtics, the two odds reach the same value (1.90) at the AH -3.5. This means that, for the betting market, it is equally probable that the final score will be more than 3.5 points in favor of GSW or less than 3.5 points in favor of GSW, that is to say that the betting market best prediction is that GSW will win with 3.5 points.<br>
+In this Finals' match betweet Golden State Warriors and Boston Celtics, the two odds reach the same value (1.90) at the AH -3.5. This means that, for the betting market, it is equally probable that the final score will be more than 3.5 points in favor of GSW or less than 3.5 points in favor of GSW, that is to say that the betting market best prediction is that GSW will win with 3.5 points over Boston.<br>
